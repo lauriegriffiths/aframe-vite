@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Back4App People Viewer</title>
+    <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
+    <script src="https://unpkg.com/parse/dist/parse.min.js"></script>
+    <script src="https://unpkg.com/aframe-text-geometry-component/dist/aframe-text-geometry-component.min.js"></script>
+    <style>
+      #loading {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-family: sans-serif;
+        font-size: 1.5em;
+        z-index: 999;
+        background: rgba(0, 0, 0, 0.6);
+        padding: 1em 2em;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loading">Loading people data...</div>
+
+    <a-scene id="scene" background="color: #1a1a2e">
+      <a-assets>
+        <a-asset-item
+          id="font"
+          src="https://cdn.aframe.io/fonts/mozillavr.fnt"
+        ></a-asset-item>
+      </a-assets>
+
+      <!-- Floor -->
+      <a-plane
+        position="0 0 -5"
+        rotation="-90 0 0"
+        width="40"
+        height="20"
+        color="#16213e"
+        roughness="0.8"
+      >
+      </a-plane>
+
+      <!-- Ambient lighting -->
+      <a-light type="ambient" color="#ffffff" intensity="0.5"></a-light>
+      <a-light
+        type="directional"
+        color="#ffffff"
+        intensity="0.8"
+        position="2 4 2"
+      ></a-light>
+
+      <!-- Camera with look controls and cursor for hover detection -->
+      <a-entity position="0 2 4">
+        <a-camera look-controls wasd-controls>
+          <a-cursor
+            color="#ffffff"
+            opacity="0.8"
+            raycaster="objects: .interactive"
+          >
+          </a-cursor>
+        </a-camera>
+      </a-entity>
+
+      <!-- Scene title (3D extruded text) -->
+      <a-entity
+        id="scene-title"
+        text-geometry="value: People from Back4App漢字; size: 0.4; height: 0.12; curveSegments: 6; font: /helvetiker_regular.typeface.json"
+        material="color: #e94560; metalness: 0.4; roughness: 0.3"
+        position="-2.34901 3.49214 -6"
+      >
+      </a-entity>
+
+      <!-- Person columns will be added here by main.js -->
+      <a-entity id="people-container" position="0 1.7 0"></a-entity>
+    </a-scene>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
