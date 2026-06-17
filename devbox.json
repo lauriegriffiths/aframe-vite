@@ -1,0 +1,17 @@
+{
+  "packages": [
+    "nodejs@24.12.0",
+    "claude-code@latest"
+  ],
+  "env": {
+    "DEVBOX_COREPACK_ENABLED": "true"
+  },
+  "shell": {
+    "init_hook": [
+      "pnpm install"
+    ],
+    "scripts": {
+      "run_test": "pnpm run start"
+    }
+  }
+}
