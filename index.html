@@ -2,9 +2,8 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Back4App People Viewer</title>
+    <title>A-Frame People Demo</title>
     <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
-    <script src="https://unpkg.com/parse/dist/parse.min.js"></script>
     <script src="https://unpkg.com/aframe-text-geometry-component/dist/aframe-text-geometry-component.min.js"></script>
     <style>
       #loading {
@@ -25,8 +24,15 @@
   <body>
     <div id="loading">Loading people data...</div>
 
-    <a-scene id="scene" background="color: #1a1a2e">
-      <a-assets>
+    <a-scene id="main-scene">
+      <a-sky
+        id="sky"
+        color="#1a1a2e"
+        animation__color="property: color; dur: 800; easing: easeInOutQuad; startEvents: colorchange"
+      >
+      </a-sky>
+
+      <a-assets id="assets">
         <a-asset-item
           id="font"
           src="https://cdn.aframe.io/fonts/mozillavr.fnt"
@@ -35,6 +41,7 @@
 
       <!-- Floor -->
       <a-plane
+        id="floor"
         position="0 0 -5"
         rotation="-90 0 0"
         width="40"
@@ -44,19 +51,26 @@
       >
       </a-plane>
 
-      <!-- Ambient lighting -->
-      <a-light type="ambient" color="#ffffff" intensity="0.5"></a-light>
+      <!-- Lighting -->
       <a-light
+        id="ambient-light"
+        type="ambient"
+        color="#ffffff"
+        intensity="1.2"
+      ></a-light>
+      <a-light
+        id="directional-light"
         type="directional"
         color="#ffffff"
-        intensity="0.8"
+        intensity="1.8"
         position="2 4 2"
       ></a-light>
 
-      <!-- Camera with look controls and cursor for hover detection -->
-      <a-entity position="0 2 4">
-        <a-camera look-controls wasd-controls>
+      <!-- Camera -->
+      <a-entity id="camera-rig" position="0 2 4">
+        <a-camera id="camera" look-controls wasd-controls>
           <a-cursor
+            id="cursor"
             color="#ffffff"
             opacity="0.8"
             raycaster="objects: .interactive"
@@ -68,13 +82,42 @@
       <!-- Scene title (3D extruded text) -->
       <a-entity
         id="scene-title"
-        text-geometry="value: People from Back4App漢字; size: 0.4; height: 0.12; curveSegments: 6; font: /helvetiker_regular.typeface.json"
+        text-geometry="value: A-Frame People Demo; size: 0.4; height: 0.12; curveSegments: 6; font: /helvetiker_regular.typeface.json"
         material="color: #e94560; metalness: 0.4; roughness: 0.3"
-        position="-2.34901 3.49214 -6"
+        position="-3.2 5 -6"
       >
       </a-entity>
 
-      <!-- Person columns will be added here by main.js -->
+      <!-- Info panel — shown when a column is clicked -->
+      <a-entity id="info-panel" position="0 5.5 -5" visible="false">
+        <a-plane
+          id="info-panel-bg"
+          color="#000000"
+          opacity="0.8"
+          width="3"
+          height="1.2"
+        ></a-plane>
+        <a-text
+          id="info-panel-name"
+          data-role="name"
+          value=""
+          align="center"
+          color="#ffffff"
+          scale="1.4 1.4 1.4"
+          position="0 0.25 0.01"
+        ></a-text>
+        <a-text
+          id="info-panel-age"
+          data-role="age"
+          value=""
+          align="center"
+          color="#ffffff"
+          scale="1.1 1.1 1.1"
+          position="0 -0.2 0.01"
+        ></a-text>
+      </a-entity>
+
+      <!-- Person columns injected here by main.js -->
       <a-entity id="people-container" position="0 1.7 0"></a-entity>
     </a-scene>
 

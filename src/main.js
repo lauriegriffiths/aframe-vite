@@ -1,6 +1,3 @@
-Parse.initialize(import.meta.env.VITE_BACK4APP_APP_ID, import.meta.env.VITE_BACK4APP_JS_KEY);
-Parse.serverURL = 'https://parseapi.back4app.com';
-
 const COLORS = ['#e94560', '#0f3460', '#533483', '#4cc3d9', '#ffc65d', '#ef2d5e', '#7bc8a4'];
 
 function withFade(el, toOpacity) {
@@ -22,6 +19,7 @@ AFRAME.registerComponent('person-column', {
     const height = Math.max(0.3, (age / 100) * 4);
 
     const box = document.createElement('a-box');
+    box.setAttribute('id', `box-${name.toLowerCase()}`);
     box.setAttribute('position', `0 ${height / 2} 0`);
     box.setAttribute('width', '1.2');
     box.setAttribute('depth', '1.2');
@@ -29,9 +27,12 @@ AFRAME.registerComponent('person-column', {
     box.setAttribute('color', color);
     box.setAttribute('roughness', '0.4');
     box.setAttribute('metalness', '0.3');
+    box.setAttribute('animation__hover-in',  'property: scale; to: 1.08 1.08 1.08; dur: 150; startEvents: mouseenter; easing: easeOutQuad');
+    box.setAttribute('animation__hover-out', 'property: scale; to: 1 1 1;           dur: 150; startEvents: mouseleave; easing: easeInQuad');
     box.classList.add('interactive');
 
     const tooltip = document.createElement('a-entity');
+    tooltip.setAttribute('id', `tooltip-${name.toLowerCase()}`);
     tooltip.setAttribute('position', `0 ${height + 1.2} 0`);
 
     const bg = withFade(document.createElement('a-plane'), 0.75);
@@ -69,30 +70,44 @@ AFRAME.registerComponent('person-column', {
       box.setAttribute('emissive', '#000000');
       box.setAttribute('emissive-intensity', '0');
     });
+
+    box.addEventListener('click', () => {
+      document.querySelector('#sky').setAttribute('color', color);
+      const panel = document.querySelector('#info-panel');
+      panel.setAttribute('visible', 'true');
+      panel.querySelector('[data-role="name"]').setAttribute('value', name);
+      panel.querySelector('[data-role="age"]').setAttribute('value', `Age: ${age}`);
+      panel.querySelector('[data-role="age"]').setAttribute('color', color);
+    });
+  },
+});
+
+AFRAME.registerPrimitive('a-person-column', {
+  defaultComponents: { 'person-column': {} },
+  mappings: {
+    name:  'person-column.name',
+    age:   'person-column.age',
+    color: 'person-column.color',
   },
 });
 
 document.querySelector('a-scene').addEventListener('loaded', async () => {
   const loading = document.getElementById('loading');
   try {
-    const query = new Parse.Query('person');
-    query.limit(20);
-    const results = await query.find();
-    const people = results.map(obj => ({ name: obj.get('name'), age: obj.get('age') }));
-    console.log(`Fetched ${people.length} people from Back4App:`, people);
-
-    if (!people.length) {
-      loading.textContent = 'No people found in database.';
-      return;
-    }
+    const res = await fetch('/data/people.json');
+    const people = await res.json();
+    console.log(`Loaded ${people.length} people from local JSON:`, people);
 
     const container = document.getElementById('people-container');
     const spacing = 2.5;
     const offset = ((people.length - 1) * spacing) / 2;
 
     people.forEach((person, i) => {
-      const el = document.createElement('a-entity');
-      el.setAttribute('person-column', { name: person.name, age: person.age, color: COLORS[i % COLORS.length] });
+      const el = document.createElement('a-person-column');
+      el.setAttribute('id', `person-${person.name.toLowerCase()}`);
+      el.setAttribute('name', person.name);
+      el.setAttribute('age', person.age);
+      el.setAttribute('color', COLORS[i % COLORS.length]);
       el.setAttribute('position', `${i * spacing - offset} 0 -5`);
       container.appendChild(el);
     });
