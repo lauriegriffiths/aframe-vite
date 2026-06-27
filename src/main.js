@@ -2,16 +2,16 @@ const COLORS = ['#e94560', '#0f3460', '#533483', '#4cc3d9', '#ffc65d', '#ef2d5e'
 
 function withFade(el, toOpacity) {
   el.setAttribute('opacity', '0');
-  el.setAttribute('animation__in',  `property: opacity; to: ${toOpacity}; dur: 250; easing: easeOutQuad; startEvents: fadeIn`);
+  el.setAttribute('animation__in', `property: opacity; to: ${toOpacity}; dur: 250; easing: easeOutQuad; startEvents: fadeIn`);
   el.setAttribute('animation__out', `property: opacity; to: 0;           dur: 200; easing: easeInQuad;  startEvents: fadeOut`);
   return el;
 }
 
 AFRAME.registerComponent('person-column', {
   schema: {
-    name:  { type: 'string' },
-    age:   { type: 'number' },
-    color: { type: 'color'  },
+    name: { type: 'string' },
+    age: { type: 'number' },
+    color: { type: 'color' },
   },
 
   init() {
@@ -27,7 +27,7 @@ AFRAME.registerComponent('person-column', {
     box.setAttribute('color', color);
     box.setAttribute('roughness', '0.4');
     box.setAttribute('metalness', '0.3');
-    box.setAttribute('animation__hover-in',  'property: scale; to: 1.08 1.08 1.08; dur: 150; startEvents: mouseenter; easing: easeOutQuad');
+    box.setAttribute('animation__hover-in', 'property: scale; to: 1.08 1.08 1.08; dur: 150; startEvents: mouseenter; easing: easeOutQuad');
     box.setAttribute('animation__hover-out', 'property: scale; to: 1 1 1;           dur: 150; startEvents: mouseleave; easing: easeInQuad');
     box.classList.add('interactive');
 
@@ -85,8 +85,8 @@ AFRAME.registerComponent('person-column', {
 AFRAME.registerPrimitive('a-person-column', {
   defaultComponents: { 'person-column': {} },
   mappings: {
-    name:  'person-column.name',
-    age:   'person-column.age',
+    name: 'person-column.name',
+    age: 'person-column.age',
     color: 'person-column.color',
   },
 });
