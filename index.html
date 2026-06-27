@@ -2,123 +2,118 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>A-Frame People Demo</title>
+    <title>VR Shooter</title>
     <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
-    <script src="https://unpkg.com/aframe-text-geometry-component/dist/aframe-text-geometry-component.min.js"></script>
     <style>
-      #loading {
+      #score-display {
+        position: fixed;
+        top: 20px;
+        right: 24px;
+        color: #fff;
+        font-family: monospace;
+        font-size: 2em;
+        font-weight: bold;
+        z-index: 999;
+        text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
+        pointer-events: none;
+        user-select: none;
+      }
+
+      #score-display.flash {
+        animation: scoreFlash 0.3s ease-out;
+      }
+
+      @keyframes scoreFlash {
+        0%   { transform: scale(1.5); color: #ff0; text-shadow: 0 0 20px #ff0; }
+        100% { transform: scale(1);   color: #fff; text-shadow: 0 0 10px #0ff; }
+      }
+
+      #crosshair {
         position: fixed;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        color: white;
-        font-family: sans-serif;
-        font-size: 1.5em;
+        width: 20px;
+        height: 20px;
+        pointer-events: none;
         z-index: 999;
-        background: rgba(0, 0, 0, 0.6);
-        padding: 1em 2em;
-        border-radius: 8px;
+      }
+
+      #crosshair::before,
+      #crosshair::after {
+        content: '';
+        position: absolute;
+        background: rgba(0, 255, 255, 0.8);
+      }
+
+      #crosshair::before {
+        width: 2px;
+        height: 20px;
+        left: 9px;
+        top: 0;
+      }
+
+      #crosshair::after {
+        width: 20px;
+        height: 2px;
+        top: 9px;
+        left: 0;
       }
     </style>
   </head>
   <body>
-    <div id="loading">Loading people data...</div>
+    <div id="score-display">SCORE: 0</div>
+    <div id="crosshair"></div>
 
     <a-scene id="main-scene">
-      <a-sky
-        id="sky"
-        color="#1a1a2e"
-        animation__color="property: color; dur: 800; easing: easeInOutQuad; startEvents: colorchange"
-      >
-      </a-sky>
-
-      <a-assets id="assets">
-        <a-asset-item
-          id="font"
-          src="https://cdn.aframe.io/fonts/mozillavr.fnt"
-        ></a-asset-item>
-      </a-assets>
+      <a-sky color="#0a0a1a"></a-sky>
 
       <!-- Floor -->
       <a-plane
-        id="floor"
-        position="0 0 -5"
         rotation="-90 0 0"
-        width="40"
-        height="20"
-        color="#16213e"
-        roughness="0.8"
-      >
-      </a-plane>
+        width="60"
+        height="60"
+        color="#0d0d1a"
+        roughness="0.9"
+        metalness="0.1"
+      ></a-plane>
 
-      <!-- Lighting -->
-      <a-light
-        id="ambient-light"
-        type="ambient"
-        color="#ffffff"
-        intensity="1.2"
-      ></a-light>
-      <a-light
-        id="directional-light"
-        type="directional"
-        color="#ffffff"
-        intensity="1.8"
-        position="2 4 2"
-      ></a-light>
+      <!-- Ambient star-field glow -->
+      <a-light type="ambient" color="#112244" intensity="0.5"></a-light>
+      <a-light type="directional" color="#4488ff" intensity="0.8" position="2 4 2"></a-light>
+      <a-light type="point" color="#ff0066" intensity="0.4" position="0 3 0" distance="15"></a-light>
 
-      <!-- Camera -->
-      <a-entity id="camera-rig" position="0 2 4">
-        <a-camera id="camera" look-controls wasd-controls>
+      <!-- Camera rig with VR laser controllers and desktop cursor -->
+      <a-entity id="rig" position="0 1.6 0">
+        <a-camera look-controls wasd-controls>
+          <!-- Desktop cursor — hidden dot, raycaster does the work -->
           <a-cursor
             id="cursor"
-            color="#ffffff"
-            opacity="0.8"
-            raycaster="objects: .interactive"
-          >
-          </a-cursor>
+            color="transparent"
+            opacity="0"
+            raycaster="objects: .shootable; far: 20"
+            fuse="false"
+          ></a-cursor>
         </a-camera>
+
+        <!-- VR laser controllers -->
+        <a-entity
+          id="left-hand"
+          laser-controls="hand: left"
+          raycaster="objects: .shootable; far: 20; lineColor: #00ffff; lineOpacity: 0"
+        ></a-entity>
+        <a-entity
+          id="right-hand"
+          laser-controls="hand: right"
+          raycaster="objects: .shootable; far: 20; lineColor: #00ffff; lineOpacity: 0"
+        ></a-entity>
       </a-entity>
 
-      <!-- Scene title (3D extruded text) -->
-      <a-entity
-        id="scene-title"
-        text-geometry="value: A-Frame People Demo; size: 0.4; height: 0.12; curveSegments: 6; font: /helvetiker_regular.typeface.json"
-        material="color: #e94560; metalness: 0.4; roughness: 0.3"
-        position="-3.2 5 -6"
-      >
-      </a-entity>
+      <!-- Game manager drives all game logic -->
+      <a-entity id="game-manager" game-manager></a-entity>
 
-      <!-- Info panel — shown when a column is clicked -->
-      <a-entity id="info-panel" position="0 6.81924 -5" visible="false">
-        <a-plane
-          id="info-panel-bg"
-          color="#000000"
-          opacity="0.8"
-          width="3"
-          height="1.2"
-        ></a-plane>
-        <a-text
-          id="info-panel-name"
-          data-role="name"
-          value=""
-          align="center"
-          color="#ffffff"
-          scale="1.4 1.4 1.4"
-          position="0 0.25 0.01"
-        ></a-text>
-        <a-text
-          id="info-panel-age"
-          data-role="age"
-          value=""
-          align="center"
-          color="#ffffff"
-          scale="1.1 1.1 1.1"
-          position="0 -0.2 0.01"
-        ></a-text>
-      </a-entity>
-
-      <!-- Person columns injected here by main.js -->
-      <a-entity id="people-container" position="0 1.7 0"></a-entity>
+      <!-- Spheres injected here by game-manager -->
+      <a-entity id="spheres-container"></a-entity>
     </a-scene>
 
     <script type="module" src="/src/main.js"></script>
