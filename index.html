@@ -9,12 +9,12 @@
         position: fixed;
         top: 20px;
         right: 24px;
-        color: #fff;
+        color: #111;
         font-family: monospace;
         font-size: 2em;
         font-weight: bold;
         z-index: 999;
-        text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
+        text-shadow: 0 1px 3px rgba(255,255,255,0.8);
         pointer-events: none;
         user-select: none;
       }
@@ -24,8 +24,8 @@
       }
 
       @keyframes scoreFlash {
-        0%   { transform: scale(1.5); color: #ff0; text-shadow: 0 0 20px #ff0; }
-        100% { transform: scale(1);   color: #fff; text-shadow: 0 0 10px #0ff; }
+        0%   { transform: scale(1.5); color: #e00; }
+        100% { transform: scale(1);   color: #111; }
       }
 
       #crosshair {
@@ -66,22 +66,21 @@
     <div id="crosshair"></div>
 
     <a-scene id="main-scene">
-      <a-sky color="#0a0a1a"></a-sky>
+      <a-sky color="#d8d8d8"></a-sky>
 
       <!-- Floor -->
       <a-plane
         rotation="-90 0 0"
         width="60"
         height="60"
-        color="#0d0d1a"
+        color="#cccccc"
         roughness="0.9"
-        metalness="0.1"
+        metalness="0.05"
       ></a-plane>
 
-      <!-- Ambient star-field glow -->
-      <a-light type="ambient" color="#112244" intensity="0.5"></a-light>
-      <a-light type="directional" color="#4488ff" intensity="0.8" position="2 4 2"></a-light>
-      <a-light type="point" color="#ff0066" intensity="0.4" position="0 3 0" distance="15"></a-light>
+      <!-- Lighting -->
+      <a-light type="ambient" color="#ffffff" intensity="0.8"></a-light>
+      <a-light type="directional" color="#ffffff" intensity="1.2" position="2 4 2"></a-light>
 
       <!-- Camera rig with VR laser controllers and desktop cursor -->
       <a-entity id="rig" position="0 1.6 0">
@@ -96,17 +95,9 @@
           ></a-cursor>
         </a-camera>
 
-        <!-- VR laser controllers -->
-        <a-entity
-          id="left-hand"
-          laser-controls="hand: left"
-          raycaster="objects: .shootable; far: 20; lineColor: #00ffff; lineOpacity: 0"
-        ></a-entity>
-        <a-entity
-          id="right-hand"
-          laser-controls="hand: right"
-          raycaster="objects: .shootable; far: 20; lineColor: #00ffff; lineOpacity: 0"
-        ></a-entity>
+        <!-- VR laser controllers — raycaster configured in JS after laser-controls init -->
+        <a-entity id="left-hand" laser-controls="hand: left"></a-entity>
+        <a-entity id="right-hand" laser-controls="hand: right"></a-entity>
       </a-entity>
 
       <!-- Game manager drives all game logic -->

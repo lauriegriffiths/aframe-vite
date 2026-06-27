@@ -262,71 +262,66 @@ AFRAME.registerComponent('game-manager', {
   setupInputHandlers() {
     const scene = this.el.sceneEl;
 
-    // Desktop: click on shootable sphere (fired by cursor raycaster)
+    // Desktop: cursor click on a shootable sphere
     scene.addEventListener('click', (e) => {
       if (!e.target.classList.contains('shootable')) return;
       AudioSystem.init();
       AudioSystem.playLaser();
-      const orbitEntity = e.target.parentNode;
-      if (orbitEntity && orbitEntity.components['explodable']) {
-        orbitEntity.components['explodable'].explode();
-      }
+      e.target.parentNode?.components['explodable']?.explode();
     });
 
-    // VR: triggerdown on a hand with laser-controls
+    // VR: fire on triggerdown
     scene.addEventListener('triggerdown', (e) => {
       const handEl = e.target;
-      if (!handEl.components || !handEl.components['laser-controls']) return;
+      if (!handEl.components?.['laser-controls']) return;
       AudioSystem.init();
       AudioSystem.playLaser();
-      this.fireLaser(handEl);
+      this._handleShot(handEl);
     });
 
-    // Set up laser beam visuals once scene loads
-    scene.addEventListener('loaded', () => {
-      this._setupLaserBeams();
+    // Configure each controller when it physically connects (enters VR)
+    scene.addEventListener('controllerconnected', (e) => {
+      const handEl = e.target;
+      if (!handEl.hasAttribute('laser-controls')) return;
+      this._setupVRController(handEl);
+    });
+
+  },
+
+  // Called when a VR controller connects — configures raycaster AFTER laser-controls init
+  _setupVRController(handEl) {
+    // Delay so laser-controls can finish its own setAttribute('raycaster', ...) call first,
+    // then override with our settings. showLine:true uses the SAME ray transform as collision,
+    // guaranteeing the visual and the hit detection are always aligned.
+    setTimeout(() => {
+      handEl.setAttribute('raycaster', {
+        objects: '.shootable',
+        far: 20,
+        showLine: true,
+        lineColor: '#00ffff',
+        lineOpacity: 0, // hidden until fired
+      });
+    }, 100);
+
+    // Track the closest intersected element continuously via events
+    handEl._hitEl = null;
+    handEl.addEventListener('raycaster-intersection', (evt) => {
+      handEl._hitEl = evt.detail.els[0] || null;
+    });
+    handEl.addEventListener('raycaster-intersection-cleared', () => {
+      handEl._hitEl = null;
     });
   },
 
-  _setupLaserBeams() {
-    ['#left-hand', '#right-hand'].forEach((sel) => {
-      const handEl = document.querySelector(sel);
-      if (!handEl) return;
+  _handleShot(handEl) {
+    // Flash the raycaster's own line — it IS the collision ray, so alignment is exact
+    handEl.setAttribute('raycaster', 'lineOpacity', 0.9);
+    setTimeout(() => handEl.setAttribute('raycaster', 'lineOpacity', 0), 200);
 
-      const beam = document.createElement('a-cylinder');
-      beam.setAttribute('radius', '0.008');
-      beam.setAttribute('height', '6');
-      beam.setAttribute('color', '#00ffff');
-      beam.setAttribute('emissive', '#00ffff');
-      beam.setAttribute('emissive-intensity', '2');
-      beam.setAttribute('material', 'transparent: true; opacity: 0.85');
-      beam.setAttribute('position', '0 0 -3');
-      beam.setAttribute('rotation', '90 0 0');
-      beam.setAttribute('visible', 'false');
-      handEl.appendChild(beam);
-      handEl._laserBeam = beam;
-    });
-  },
-
-  fireLaser(handEl) {
-    // Flash the laser beam
-    const beam = handEl._laserBeam;
-    if (beam) {
-      beam.setAttribute('visible', 'true');
-      setTimeout(() => beam.setAttribute('visible', 'false'), 160);
-    }
-
-    // Check raycaster intersections
-    const raycaster = handEl.components.raycaster;
-    if (!raycaster) return;
-    const hits = raycaster.intersectedEls;
-    if (!hits || hits.length === 0) return;
-
-    const hitEl = hits[0];
-    if (!hitEl.classList.contains('shootable')) return;
-    const orbitEntity = hitEl.parentNode;
-    if (orbitEntity && orbitEntity.components['explodable']) {
-      orbitEntity.components['explodable'].explode();
+    // Use the element last reported by raycaster-intersection events
+    const hitEl = handEl._hitEl;
+    if (hitEl?.classList.contains('shootable')) {
+      hitEl.parentNode?.components['explodable']?.explode();
     }
   },
 });
